@@ -76,37 +76,21 @@ builder.Services.AddControllers()
 // SWAGGER + JWT
 // ==========================
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddCors(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.AddPolicy("FrontendPolicy", policy =>
     {
-        Title = "BackendLimpio",
-        Version = "v1"
-    });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Ingrese el token JWT así: Bearer {token}"
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+        policy
+            .WithOrigins(
+                "http://localhost:5500",
+                "http://localhost:8000",
+                "https://inulab-client.vercel.app",
+                "https://inulab-client-agrczsvfh-joseandres08s-projects.vercel.app",
+                "https://inulab-client-mnoa8fvyx-joseandres08s-projects.vercel.app",
+                "https://inulab-client-gl1lrvdag-joseandres08s-projects.vercel.app"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
