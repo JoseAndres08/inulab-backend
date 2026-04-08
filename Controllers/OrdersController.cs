@@ -2,8 +2,6 @@
 using BackendLimpio.DTOs.Common;
 using BackendLimpio.DTOs.Responses;
 using BackendLimpio.Models;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,17 +15,10 @@ namespace BackendLimpio.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly InulaDbContext _context;
-        private readonly Cloudinary _cloudinary;
 
-        public OrdersController(InulaDbContext context, IConfiguration configuration)
+        public OrdersController(InulaDbContext context)
         {
             _context = context;
-            var account = new Account(
-                configuration["CLOUDINARY_CLOUD_NAME"],
-                configuration["CLOUDINARY_API_KEY"],
-                configuration["CLOUDINARY_API_SECRET"]
-            );
-            _cloudinary = new Cloudinary(account);
         }
 
         [Authorize(Roles = "cliente,medico,dueño")]
@@ -226,25 +217,35 @@ namespace BackendLimpio.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
 
-            using var stream = file.OpenReadStream();
-            var uploadParams = new RawUploadParams
+            var folderPath = Path.Combine("/var/data", "results");
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+            var fileName = $"{id}.pdf";
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                File = new FileDescription(file.FileName, stream),
-                PublicId = $"results/{id}",
-                Overwrite = true,
-                AccessMode = "public"
-            };
+                await file.CopyToAsync(stream);
+            }
 
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-
-            if (uploadResult.Error != null)
-                return BadRequest($"Error subiendo a Cloudinary: {uploadResult.Error.Message}");
-
-            order.ResultPdfUrl = uploadResult.SecureUrl.ToString();
+            order.ResultPdfUrl = $"/api/Orders/{id}/result-pdf";
             order.Status = OrderStatus.ResultsUploaded;
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "PDF subido correctamente", url = order.ResultPdfUrl });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id}/result-pdf")]
+        public IActionResult GetResultPdf(Guid id)
+        {
+            var filePath = Path.Combine("/var/data", "results", $"{id}.pdf");
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("PDF no encontrado");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/pdf");
         }
 
         [Authorize(Roles = "admin,motorizado")]
