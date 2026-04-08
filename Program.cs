@@ -116,12 +116,18 @@ var app = builder.Build();
 // ==========================
 // PIPELINE
 // ==========================
-app.UseSwagger();
-app.UseSwaggerUI();
+try
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("SWAGGER ERROR: " + ex.Message);
+}
 
 app.UseStaticFiles();
 
-// CORS DEBE IR ANTES DE AUTH
 app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
