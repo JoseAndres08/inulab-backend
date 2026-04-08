@@ -231,7 +231,8 @@ namespace BackendLimpio.Controllers
             {
                 File = new FileDescription(file.FileName, stream),
                 PublicId = $"results/{id}",
-                Overwrite = true
+                Overwrite = true,
+                AccessMode = "public"
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
