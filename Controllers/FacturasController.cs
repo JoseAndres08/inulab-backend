@@ -48,7 +48,7 @@ namespace BackendLimpio.Controllers
                     documentType = f.TipoComprobante,
                     f.Fecha,
                     invoicePdf = f.PdfPath != null
-                        ? $"http://localhost:7237{f.PdfPath}"
+                        ? $"https://inulab-backend-production.up.railway.app/api/Facturas/{f.Id}/pdf"
                         : null
                 })
                 .ToListAsync();
@@ -59,7 +59,6 @@ namespace BackendLimpio.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Consumes("multipart/form-data")]
-        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> PostFactura([FromForm] IFormFile file, [FromForm] string orderId, [FromForm] string documentType)
         {
             try
@@ -67,11 +66,11 @@ namespace BackendLimpio.Controllers
                 if (file == null || file.Length == 0)
                     return BadRequest("No se envió archivo");
 
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "facturas");
-                Directory.CreateDirectory(uploadsFolder);
+                var folderPath = Path.Combine("/var/data", "facturas");
+                Directory.CreateDirectory(folderPath);
 
                 var fileName = $"factura_{Guid.NewGuid()}.pdf";
-                var filePath = Path.Combine(uploadsFolder, fileName);
+                var filePath = Path.Combine(folderPath, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
@@ -84,7 +83,7 @@ namespace BackendLimpio.Controllers
                     TipoComprobante = documentType,
                     Total = 0,
                     Fecha = DateTime.UtcNow,
-                    PdfPath = $"/facturas/{fileName}"
+                    PdfPath = filePath
                 };
 
                 _context.Facturas.Add(factura);
@@ -93,11 +92,11 @@ namespace BackendLimpio.Controllers
                 var order = await _context.Orders.FindAsync(factura.OrderId);
                 if (order != null)
                 {
-                    order.InvoicePdfUrl = factura.PdfPath;
+                    order.InvoicePdfUrl = $"/api/Facturas/{factura.Id}/pdf";
                     await _context.SaveChangesAsync();
                 }
 
-                return Ok(new { factura.Id, pdfUrl = factura.PdfPath });
+                return Ok(new { factura.Id, pdfUrl = $"/api/Facturas/{factura.Id}/pdf" });
             }
             catch (Exception ex)
             {
@@ -105,18 +104,18 @@ namespace BackendLimpio.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}/pdf")]
         public async Task<IActionResult> GetFacturaPdf(int id)
         {
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null) return NotFound();
-
             if (factura.PdfPath == null) return NotFound("Sin PDF");
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", factura.PdfPath.TrimStart('/'));
-            if (!System.IO.File.Exists(filePath)) return NotFound("Archivo no encontrado");
+            if (!System.IO.File.Exists(factura.PdfPath))
+                return NotFound("Archivo no encontrado");
 
-            var bytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            var bytes = await System.IO.File.ReadAllBytesAsync(factura.PdfPath);
             return File(bytes, "application/pdf", $"factura_{factura.Id}.pdf");
         }
     }
