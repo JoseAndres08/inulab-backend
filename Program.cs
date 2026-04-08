@@ -23,7 +23,7 @@ builder.Services.AddDbContext<InulaDbContext>(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // 🔥 IMPORTANTE PARA LOCAL
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -44,14 +44,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // ==========================
-// 🔥 CORS (ARREGLADO)
+// CORS
 // ==========================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5500", "http://localhost:8000") // ✅ AMBOS PUERTOS
+            .WithOrigins(
+                "http://localhost:5500",
+                "http://localhost:8000",
+                "https://inulab-client.vercel.app",
+                "https://inulab-staff.vercel.app",
+                "https://inulab-client-agrczsvfh-joseandres08s-projects.vercel.app",
+                "https://inulab-client-mnoa8fvyx-joseandres08s-projects.vercel.app",
+                "https://inulab-client-gl1lrvdag-joseandres08s-projects.vercel.app"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -73,44 +81,22 @@ builder.Services.AddControllers()
     });
 
 // ==========================
-// SWAGGER + JWT
+// SWAGGER
 // ==========================
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontendPolicy", policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:5500",
-                "http://localhost:8000",
-                "https://inulab-client.vercel.app",
-                "https://inulab-client-agrczsvfh-joseandres08s-projects.vercel.app",
-                "https://inulab-client-mnoa8fvyx-joseandres08s-projects.vercel.app",
-                "https://inulab-client-gl1lrvdag-joseandres08s-projects.vercel.app"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // ==========================
 // PIPELINE
 // ==========================
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// 🔥 IMPORTANTE: comentar HTTPS en pruebas
-// app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseStaticFiles();
 
-// 🔥 CORS DEBE IR ANTES DE AUTH
+// CORS DEBE IR ANTES DE AUTH
 app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
