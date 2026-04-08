@@ -7,13 +7,6 @@ using System.Security.Claims;
 
 namespace BackendLimpio.Controllers
 {
-    public class PostFacturaRequest
-    {
-        public IFormFile? file { get; set; }
-        public string? orderId { get; set; }
-        public string? documentType { get; set; }
-    }
-
     [ApiController]
     [Route("api/[controller]")]
     public class FacturasController : ControllerBase
@@ -66,17 +59,20 @@ namespace BackendLimpio.Controllers
         [HttpPost]
         [Authorize(Roles = "admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> PostFactura([FromForm] PostFacturaRequest request)
+        public async Task<IActionResult> PostFactura(
+            IFormFile file,
+            [FromForm] string? orderId,
+            [FromForm] string? documentType)
         {
             try
             {
-                if (request.file == null || request.file.Length == 0)
+                if (file == null || file.Length == 0)
                     return BadRequest("No se envió archivo");
 
-                if (string.IsNullOrEmpty(request.orderId))
+                if (string.IsNullOrEmpty(orderId))
                     return BadRequest("orderId es requerido");
 
-                if (!Guid.TryParse(request.orderId, out var orderGuid))
+                if (!Guid.TryParse(orderId, out var orderGuid))
                     return BadRequest("orderId inválido");
 
                 var folderPath = Path.Combine("/var/data", "facturas");
@@ -87,13 +83,13 @@ namespace BackendLimpio.Controllers
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await request.file.CopyToAsync(stream);
+                    await file.CopyToAsync(stream);
                 }
 
                 var factura = new Factura
                 {
                     OrderId = orderGuid,
-                    TipoComprobante = request.documentType,
+                    TipoComprobante = documentType,
                     Total = 0,
                     Fecha = DateTime.UtcNow,
                     PdfPath = filePath
