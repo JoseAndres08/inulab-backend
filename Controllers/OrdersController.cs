@@ -2,6 +2,8 @@
 using BackendLimpio.DTOs.Common;
 using BackendLimpio.DTOs.Responses;
 using BackendLimpio.Models;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +17,17 @@ namespace BackendLimpio.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly InulaDbContext _context;
+        private readonly Cloudinary _cloudinary;
 
-        public OrdersController(InulaDbContext context)
+        public OrdersController(InulaDbContext context, IConfiguration configuration)
         {
             _context = context;
+            var account = new Account(
+                configuration["CLOUDINARY_CLOUD_NAME"],
+                configuration["CLOUDINARY_API_KEY"],
+                configuration["CLOUDINARY_API_SECRET"]
+            );
+            _cloudinary = new Cloudinary(account);
         }
 
         [Authorize(Roles = "cliente,medico,dueño")]
@@ -134,8 +143,8 @@ namespace BackendLimpio.Controllers
                     InvoicePdfUrl = o.InvoicePdfUrl,
                     ResultPdfUrl = o.ResultPdfUrl,
                     AddressId = o.AddressId,
-                    MotoLat = o.MotoLat,   // ← GPS
-                    MotoLng = o.MotoLng,   // ← GPS
+                    MotoLat = o.MotoLat,
+                    MotoLng = o.MotoLng,
 
                     Address = o.Address != null ? new AddressDto
                     {
@@ -170,7 +179,6 @@ namespace BackendLimpio.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error en GetOrders: {ex.Message}");
-                Console.WriteLine($"Inner: {ex.InnerException?.Message}");
                 return StatusCode(500, $"{ex.Message} | Inner: {ex.InnerException?.Message}");
             }
         }
@@ -182,7 +190,6 @@ namespace BackendLimpio.Controllers
             return await GetOrders(null);
         }
 
-        // ✅ GPS - Motorizado actualiza su posición
         [Authorize(Roles = "motorizado")]
         [HttpPut("{id}/location")]
         public async Task<IActionResult> UpdateLocation(Guid id, [FromBody] LocationRequest request)
@@ -197,7 +204,6 @@ namespace BackendLimpio.Controllers
             return Ok(new { lat = request.Lat, lng = request.Lng });
         }
 
-        // ✅ GPS - Admin consulta posición del motorizado
         [Authorize]
         [HttpGet("{id}/location")]
         public async Task<IActionResult> GetLocation(Guid id)
@@ -220,23 +226,24 @@ namespace BackendLimpio.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
 
-            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "results");
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-            var fileName = $"{id}.pdf";
-            var filePath = Path.Combine(folderPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using var stream = file.OpenReadStream();
+            var uploadParams = new RawUploadParams
             {
-                await file.CopyToAsync(stream);
-            }
+                File = new FileDescription(file.FileName, stream),
+                PublicId = $"results/{id}",
+                Overwrite = true
+            };
 
-            order.ResultPdfUrl = $"/results/{fileName}";
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.Error != null)
+                return BadRequest($"Error subiendo a Cloudinary: {uploadResult.Error.Message}");
+
+            order.ResultPdfUrl = uploadResult.SecureUrl.ToString();
             order.Status = OrderStatus.ResultsUploaded;
-
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "PDF subido correctamente", order });
+            return Ok(new { message = "PDF subido correctamente", url = order.ResultPdfUrl });
         }
 
         [Authorize(Roles = "admin,motorizado")]
@@ -256,6 +263,7 @@ namespace BackendLimpio.Controllers
                     "assigned" => OrderStatus.Assigned,
                     "moto_en_camino" => OrderStatus.MotoEnCamino,
                     "moto_arrived" => OrderStatus.MotoArrived,
+                    "pickup_in_progress" => OrderStatus.PickupInProgress,
                     "sample_received" => OrderStatus.SampleReceived,
                     "arrived_at_lab" => OrderStatus.ArrivedAtLab,
                     "processing" => OrderStatus.Processing,
