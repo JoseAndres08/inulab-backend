@@ -59,6 +59,7 @@ namespace BackendLimpio.Controllers
         [HttpPost]
         [Authorize(Roles = "admin")]
         [Consumes("multipart/form-data")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> PostFactura(
             [FromForm] IFormFile file,
             [FromForm] string? orderId,
