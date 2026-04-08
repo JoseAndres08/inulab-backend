@@ -9,9 +9,9 @@ namespace BackendLimpio.Controllers
 {
     public class PostFacturaRequest
     {
-        public IFormFile file { get; set; } = null!;
-        public string orderId { get; set; } = null!;
-        public string documentType { get; set; } = null!;
+        public IFormFile? file { get; set; }
+        public string? orderId { get; set; }
+        public string? documentType { get; set; }
     }
 
     [ApiController]
@@ -73,6 +73,12 @@ namespace BackendLimpio.Controllers
                 if (request.file == null || request.file.Length == 0)
                     return BadRequest("No se envió archivo");
 
+                if (string.IsNullOrEmpty(request.orderId))
+                    return BadRequest("orderId es requerido");
+
+                if (!Guid.TryParse(request.orderId, out var orderGuid))
+                    return BadRequest("orderId inválido");
+
                 var folderPath = Path.Combine("/var/data", "facturas");
                 Directory.CreateDirectory(folderPath);
 
@@ -86,7 +92,7 @@ namespace BackendLimpio.Controllers
 
                 var factura = new Factura
                 {
-                    OrderId = Guid.Parse(request.orderId),
+                    OrderId = orderGuid,
                     TipoComprobante = request.documentType,
                     Total = 0,
                     Fecha = DateTime.UtcNow,
