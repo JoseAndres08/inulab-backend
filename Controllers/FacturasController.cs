@@ -7,6 +7,13 @@ using System.Security.Claims;
 
 namespace BackendLimpio.Controllers
 {
+    public class PostFacturaRequest
+    {
+        public IFormFile file { get; set; } = null!;
+        public string orderId { get; set; } = null!;
+        public string documentType { get; set; } = null!;
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class FacturasController : ControllerBase
@@ -59,14 +66,11 @@ namespace BackendLimpio.Controllers
         [HttpPost]
         [Authorize(Roles = "admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> PostFactura(
-            [FromForm] IFormFile file,
-            [FromForm] string orderId,
-            [FromForm] string documentType)
+        public async Task<IActionResult> PostFactura([FromForm] PostFacturaRequest request)
         {
             try
             {
-                if (file == null || file.Length == 0)
+                if (request.file == null || request.file.Length == 0)
                     return BadRequest("No se envió archivo");
 
                 var folderPath = Path.Combine("/var/data", "facturas");
@@ -77,13 +81,13 @@ namespace BackendLimpio.Controllers
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await file.CopyToAsync(stream);
+                    await request.file.CopyToAsync(stream);
                 }
 
                 var factura = new Factura
                 {
-                    OrderId = Guid.Parse(orderId),
-                    TipoComprobante = documentType,
+                    OrderId = Guid.Parse(request.orderId),
+                    TipoComprobante = request.documentType,
                     Total = 0,
                     Fecha = DateTime.UtcNow,
                     PdfPath = filePath
