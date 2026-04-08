@@ -89,11 +89,11 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Escribe: Bearer {tu_token}"
+        Description = "Escribe solo el token JWT (sin escribir Bearer)"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -116,15 +116,8 @@ var app = builder.Build();
 // ==========================
 // PIPELINE
 // ==========================
-try
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-catch (Exception ex)
-{
-    Console.WriteLine("SWAGGER ERROR: " + ex.Message);
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseStaticFiles();
 
