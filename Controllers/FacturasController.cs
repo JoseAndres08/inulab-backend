@@ -59,6 +59,7 @@ namespace BackendLimpio.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Consumes("multipart/form-data")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> PostFactura([FromForm] IFormFile file, [FromForm] string orderId, [FromForm] string documentType)
         {
             try
