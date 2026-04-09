@@ -229,7 +229,8 @@ namespace BackendLimpio.Controllers
             }
 
             order.ResultPdfUrl = $"/api/Orders/{id}/result-pdf";
-            order.Status = OrderStatus.ResultsUploaded;
+            if (order.Status != OrderStatus.Completed)
+                order.Status = OrderStatus.ResultsUploaded;
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "PDF subido correctamente", url = order.ResultPdfUrl });
@@ -245,7 +246,7 @@ namespace BackendLimpio.Controllers
                 return NotFound("PDF no encontrado");
 
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, "application/pdf");
+            return File(fileBytes, "application/pdf", $"{id}.pdf", false);
         }
 
         [Authorize(Roles = "admin,motorizado")]
