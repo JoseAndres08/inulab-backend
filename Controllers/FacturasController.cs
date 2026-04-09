@@ -126,7 +126,8 @@ namespace BackendLimpio.Controllers
                 return NotFound("Archivo no encontrado");
 
             var bytes = await System.IO.File.ReadAllBytesAsync(factura.PdfPath);
-            return File(bytes, "application/pdf", $"factura_{factura.Id}.pdf");
+            Response.Headers["Content-Disposition"] = "inline";
+            return File(bytes, "application/pdf");
         }
     }
 }
