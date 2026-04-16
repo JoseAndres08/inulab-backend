@@ -259,6 +259,10 @@ namespace BackendLimpio.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Species")
                         .IsRequired()
                         .HasColumnType("text");

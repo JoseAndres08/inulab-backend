@@ -37,6 +37,7 @@ namespace BackendLimpio.Controllers
                     p.Species,
                     p.Breed,
                     p.Age,
+                    p.Sex,
                     p.UserId,
                     exams = _context.OrderItems
                         .Include(i => i.Order)
@@ -77,6 +78,7 @@ namespace BackendLimpio.Controllers
                 Species = dto.Species,
                 Breed = dto.Breed,
                 Age = dto.Age,
+                Sex = dto.Sex,
                 UserId = Guid.Parse(userId)
             };
 

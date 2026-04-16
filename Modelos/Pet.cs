@@ -17,6 +17,8 @@ namespace BackendLimpio.Models
 
         public int Age { get; set; }
 
+        public string Sex { get; set; } = "";
+
         [Column("UserId")]
         public Guid UserId { get; set; }
 

@@ -246,7 +246,7 @@ namespace BackendLimpio.Controllers
                 return NotFound("PDF no encontrado");
 
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            Response.Headers["Content-Disposition"] = "inline";
+            Response.Headers["Content-Disposition"] = "inline; filename=resultado.pdf";
             return File(fileBytes, "application/pdf");
         }
 
