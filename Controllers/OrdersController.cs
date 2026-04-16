@@ -225,13 +225,13 @@ namespace BackendLimpio.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
 
-            var folderPath = Path.Combine("/var/data", "results");
+            var folderPath = SystemPath.Combine("/var/data", "results");
             if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
             var fileName = $"{id}.pdf";
-            var filePath = Path.Combine(folderPath, fileName);
+            var filePath = SystemPath.Combine(folderPath, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (var stream = new FileStream(filePath, System.IO.FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
@@ -248,7 +248,7 @@ namespace BackendLimpio.Controllers
         [HttpGet("{id}/result-pdf")]
         public IActionResult GetResultPdf(Guid id)
         {
-            var filePath = Path.Combine("/var/data", "results", $"{id}.pdf");
+            var filePath = SystemPath.Combine("/var/data", "results", $"{id}.pdf");
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound("PDF no encontrado");
