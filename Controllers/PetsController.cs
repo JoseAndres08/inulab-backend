@@ -45,7 +45,8 @@ namespace BackendLimpio.Controllers
                         .Select(i => new {
                             id = i.Id,
                             type = i.ExamName,
-                            date = i.Order != null ? i.Order.CreatedAt.ToLocalTime() : DateTime.Now
+                            date = i.Order != null ? i.Order.CreatedAt.ToLocalTime() : DateTime.Now,
+                            pdfUrl = i.PdfUrl
                         })
                         .ToList()
                 })
