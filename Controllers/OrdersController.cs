@@ -1,10 +1,17 @@
-﻿using BackendLimpio.Datos;
+﻿using Azure;
+using BackendLimpio.Datos;
 using BackendLimpio.DTOs.Common;
 using BackendLimpio.DTOs.Responses;
 using BackendLimpio.Models;
+using iText.Forms.Form.Element;
+using iText.IO.Exceptions;
+using iText.Kernel.Geom;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using Org.BouncyCastle.Utilities.IO;
+using System.Drawing.Drawing2D;
 using System.Security.Claims;
 
 namespace BackendLimpio.Controllers
@@ -161,7 +168,8 @@ namespace BackendLimpio.Controllers
                                    i.Pet?.Species == "gato" ? "🐱" :
                                    i.Pet?.Species == "ave" ? "🦜" :
                                    i.Pet?.Species == "conejo" ? "🐰" : "🐾",
-                        PetOwner = ""
+                        PetOwner = "",
+                        PdfUrl = i.PdfUrl
                     }).ToList()
                 }).ToList();
 
