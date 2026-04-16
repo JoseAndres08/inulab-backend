@@ -13,6 +13,7 @@ using Microsoft.Identity.Client;
 using Org.BouncyCastle.Utilities.IO;
 using System.Drawing.Drawing2D;
 using System.Security.Claims;
+using SystemPath = System.IO.Path;
 
 namespace BackendLimpio.Controllers
 {
