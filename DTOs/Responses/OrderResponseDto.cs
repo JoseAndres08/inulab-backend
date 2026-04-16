@@ -13,8 +13,8 @@
         public string? InvoicePdfUrl { get; set; }
         public string? ResultPdfUrl { get; set; }
         public Guid? AddressId { get; set; }
-        public double? MotoLat { get; set; } // ← GPS
-        public double? MotoLng { get; set; } // ← GPS
+        public double? MotoLat { get; set; }
+        public double? MotoLng { get; set; }
         public AddressDto? Address { get; set; }
         public UserSummaryDto? Motorizado { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
@@ -28,6 +28,7 @@
         public string PetName { get; set; } = string.Empty;
         public string PetPhoto { get; set; } = string.Empty;
         public string PetOwner { get; set; } = string.Empty;
+        public string? PdfUrl { get; set; }
     }
 
     public class AddressDto
