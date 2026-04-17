@@ -123,16 +123,20 @@ namespace BackendLimpio.Controllers
                 {
                     return Ok(new
                     {
-                        id = usuario.Id,
-                        userId = usuario.Id,
-                        username = usuario.Username,
-                        type = usuario.Type,
-                        email = usuario.Email,
-                        name = usuario.Name,
-                        district = usuario.ProfileDistrict,
-                        ruc = usuario.Ruc,
-                        phone = usuario.Phone,
-                        role = role
+                        token = token,   // ← ESTO FALTA
+                        user = new
+                        {
+                            id = usuario.Id,
+                            userId = usuario.Id,
+                            username = usuario.Username,
+                            type = usuario.Type,
+                            email = usuario.Email,
+                            name = usuario.Name,
+                            clinic = usuario.Clinic,
+                            district = usuario.ProfileDistrict,
+                            ruc = usuario.Ruc,
+                            phone = usuario.Phone
+                        }
                     });
                 }
             }
