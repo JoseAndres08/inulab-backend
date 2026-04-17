@@ -101,7 +101,7 @@ namespace BackendLimpio.Controllers
                 district = usuario.ProfileDistrict,
                 ruc = usuario.Ruc,
                 phone = usuario.Phone,
-                role = role
+                role = User.FindFirst(ClaimTypes.Role)?.Value
             });
         }
 
