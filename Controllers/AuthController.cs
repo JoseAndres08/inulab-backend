@@ -129,7 +129,7 @@ namespace BackendLimpio.Controllers
                         type = usuario.Type,
                         email = usuario.Email,
                         name = usuario.Name,
-                        district = usuario.District,
+                        district = usuario.ProfileDistrict,
                         ruc = usuario.Ruc,
                         phone = usuario.Phone,
                         role = role
