@@ -2,9 +2,11 @@
 using BackendLimpio.DTOs;
 using BackendLimpio.Models;
 using BackendLimpio.Servicios;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System.Security.Claims;
 
 namespace BackendLimpio.Controllers
@@ -54,10 +56,13 @@ namespace BackendLimpio.Controllers
                 Username = request.Username ?? string.Empty,
                 PasswordHash = hashedPassword,
                 Type = request.Type ?? "dueño",
-
                 Email = request.Email ?? string.Empty,
                 Phone = request.Phone ?? string.Empty,
-                Dni = request.Dni
+                Dni = request.Dni,
+                Name = request.ClinicName ?? string.Empty,
+                Clinic = request.ClinicName ?? string.Empty,
+                ProfileDistrict = request.District ?? string.Empty,
+                Ruc = request.Ruc ?? string.Empty
             };
 
             _context.Usuarios.Add(user);
@@ -86,14 +91,17 @@ namespace BackendLimpio.Controllers
 
             return Ok(new
             {
-                token,
-                user = new
-                {
-                    id = usuario.Id,
-                    username = usuario.Username,
-                    type = usuario.Type,
-                    email = usuario.Email
-                }
+                id = usuario.Id,
+                userId = usuario.Id,
+                username = usuario.Username,
+                type = usuario.Type,
+                email = usuario.Email,
+                name = usuario.Name,
+                clinic = usuario.Clinic,
+                district = usuario.ProfileDistrict,
+                ruc = usuario.Ruc,
+                phone = usuario.Phone,
+                role = role
             });
         }
 
@@ -108,7 +116,6 @@ namespace BackendLimpio.Controllers
             var username = User.FindFirst(ClaimTypes.Name)?.Value;
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // ✅ OBTENER EL USUARIO COMPLETO PARA DEVOLVER id
             if (Guid.TryParse(userId, out var userIdGuid))
             {
                 var usuario = await _context.Usuarios.FindAsync(userIdGuid);
@@ -116,11 +123,15 @@ namespace BackendLimpio.Controllers
                 {
                     return Ok(new
                     {
-                        id = usuario.Id,  // ✅ AGREGAR id
+                        id = usuario.Id,
                         userId = usuario.Id,
                         username = usuario.Username,
                         type = usuario.Type,
                         email = usuario.Email,
+                        name = usuario.Name,
+                        district = usuario.District,
+                        ruc = usuario.Ruc,
+                        phone = usuario.Phone,
                         role = role
                     });
                 }
