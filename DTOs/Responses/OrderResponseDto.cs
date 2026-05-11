@@ -22,12 +22,13 @@
 
     public class OrderItemDto
     {
-        public string ExamName { get; set; } = string.Empty;
-        public string AddressStreet { get; set; } = string.Empty;
-        public string AddressDistrict { get; set; } = string.Empty;
-        public string PetName { get; set; } = string.Empty;
-        public string PetPhoto { get; set; } = string.Empty;
-        public string PetOwner { get; set; } = string.Empty;
+        public string ExamName { get; set; } = "";
+        public string AddressStreet { get; set; } = "";
+        public string AddressDistrict { get; set; } = "";
+        public Guid? PetId { get; set; }   // <-- agrega esta línea
+        public string PetName { get; set; } = "";
+        public string PetPhoto { get; set; } = "";
+        public string PetOwner { get; set; } = "";
         public string? PdfUrl { get; set; }
     }
 

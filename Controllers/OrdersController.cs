@@ -56,16 +56,32 @@ namespace BackendLimpio.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                var orderItem = new OrderItem
-                {
-                    Id = Guid.NewGuid(),
-                    OrderId = order.Id,
-                    ExamName = request.ExamName ?? "Examen general",
-                    AddressId = request.AddressId == Guid.Empty ? null : request.AddressId,
-                    PetId = request.PetId == Guid.Empty ? null : request.PetId
-                };
+                var itemsToCreate = request.Items != null && request.Items.Count > 0
+                    ? request.Items.Select(i => new OrderItem
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = order.Id,
+                        ExamName = i.ExamName ?? request.ExamName ?? "Examen general",
+                        AddressId = (i.AddressId.HasValue && i.AddressId != Guid.Empty)
+                                    ? i.AddressId
+                                    : (request.AddressId != Guid.Empty ? request.AddressId : (Guid?)null),
+                        PetId = (i.PetId.HasValue && i.PetId != Guid.Empty)
+                                ? i.PetId
+                                : (request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null)
+                    }).ToList()
+                    : new List<OrderItem>
+                    {
+                        new OrderItem
+                        {
+                            Id = Guid.NewGuid(),
+                            OrderId = order.Id,
+                            ExamName = request.ExamName ?? "Examen general",
+                            AddressId = request.AddressId != Guid.Empty ? request.AddressId : (Guid?)null,
+                            PetId = request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null
+                        }
+                    };
 
-                _context.OrderItems.Add(orderItem);
+                _context.OrderItems.AddRange(itemsToCreate);
                 await _context.SaveChangesAsync();
 
                 return Ok(order);
@@ -164,6 +180,7 @@ namespace BackendLimpio.Controllers
                         ExamName = i.ExamName,
                         AddressStreet = i.Address?.Street ?? "Sin dirección",
                         AddressDistrict = i.Address?.District ?? "Distrito no especificado",
+                        PetId = i.PetId,
                         PetName = i.Pet?.Name ?? "",
                         PetPhoto = i.Pet?.Species == "perro" ? "🐶" :
                                    i.Pet?.Species == "gato" ? "🐱" :
@@ -333,6 +350,16 @@ namespace BackendLimpio.Controllers
         public Guid AddressId { get; set; }
         public string? ExamName { get; set; }
         public Guid? PetId { get; set; }
+        public string? Comment { get; set; }
+        public string? DocumentType { get; set; }
+        public List<OrderItemRequest>? Items { get; set; }
+    }
+
+    public class OrderItemRequest
+    {
+        public string? ExamName { get; set; }
+        public Guid? PetId { get; set; }
+        public Guid? AddressId { get; set; }
     }
 
     public class UpdateStatusRequest
