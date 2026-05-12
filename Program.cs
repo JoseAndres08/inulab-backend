@@ -51,15 +51,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:5500",
-                "http://localhost:8000",
-                "https://inulab-client.vercel.app",
-                "https://inulab-staff.vercel.app",
-                "https://inulab-client-agrczsvfh-joseandres08s-projects.vercel.app",
-                "https://inulab-client-mnoa8fvyx-joseandres08s-projects.vercel.app",
-                "https://inulab-client-gl1lrvdag-joseandres08s-projects.vercel.app"
-            )
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
