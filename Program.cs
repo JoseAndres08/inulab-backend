@@ -126,6 +126,8 @@ app.UseSwaggerUI();
 
 app.UseStaticFiles();
 
+app.UseRouting();
+
 app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
