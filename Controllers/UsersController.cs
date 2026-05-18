@@ -35,5 +35,19 @@ namespace BackendLimpio.Controllers
                 .ToListAsync();
             return Ok(motorizados);
         }
+
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var user = await _context.Usuarios
+                .Where(u => u.Id == id)
+                .Select(u => new { u.Id, u.Username, u.Phone, u.Email, u.Name, u.LastName, u.Type })
+                .FirstOrDefaultAsync();
+
+            if (user == null) return NotFound();
+
+            return Ok(user);
+        }
     }
 }
