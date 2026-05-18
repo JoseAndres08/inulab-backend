@@ -15,6 +15,7 @@
         public Guid? AddressId { get; set; }
         public double? MotoLat { get; set; }
         public double? MotoLng { get; set; }
+        public string? Comment { get; set; }
         public AddressDto? Address { get; set; }
         public UserSummaryDto? Motorizado { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
@@ -25,7 +26,7 @@
         public string ExamName { get; set; } = "";
         public string AddressStreet { get; set; } = "";
         public string AddressDistrict { get; set; } = "";
-        public Guid? PetId { get; set; }   // <-- agrega esta línea
+        public Guid? PetId { get; set; }
         public string PetName { get; set; } = "";
         public string PetPhoto { get; set; } = "";
         public string PetOwner { get; set; } = "";
