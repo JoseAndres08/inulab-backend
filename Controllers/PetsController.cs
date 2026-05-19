@@ -55,6 +55,26 @@ namespace BackendLimpio.Controllers
             return Ok(new { pets });
         }
 
+        [HttpGet("{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetPetById(Guid id)
+        {
+            var pet = await _context.Pets
+                .Where(p => p.Id == id)
+                .Select(p => new {
+                    p.Id,
+                    p.Name,
+                    p.Species,
+                    p.Breed,
+                    p.Age,
+                    p.Sex
+                })
+                .FirstOrDefaultAsync();
+
+            if (pet == null) return NotFound();
+            return Ok(pet);
+        }
+
         [HttpPost]
         public IActionResult CreatePet([FromBody] CreatePetDto dto)
         {
