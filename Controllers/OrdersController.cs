@@ -50,7 +50,8 @@ namespace BackendLimpio.Controllers
                     Price = request.Total > 0 ? request.Total : 10,
                     Status = OrderStatus.Pending,
                     CreatedAt = DateTime.UtcNow,
-                    AddressId = request.AddressId == Guid.Empty ? null : request.AddressId
+                    AddressId = request.AddressId == Guid.Empty ? null : request.AddressId,
+                    RequiresSampling = request.RequiresSampling
                 };
 
                 _context.Orders.Add(order);
@@ -160,6 +161,8 @@ namespace BackendLimpio.Controllers
                     AddressId = o.AddressId,
                     MotoLat = o.MotoLat,
                     MotoLng = o.MotoLng,
+                    Comment = o.Comment,
+                    RequiresSampling = o.RequiresSampling,
 
                     Address = o.Address != null ? new AddressDto
                     {
@@ -353,6 +356,7 @@ namespace BackendLimpio.Controllers
         public string? Comment { get; set; }
         public string? DocumentType { get; set; }
         public List<OrderItemRequest>? Items { get; set; }
+        public bool RequiresSampling { get; set; } = false;
     }
 
     public class OrderItemRequest

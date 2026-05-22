@@ -16,6 +16,7 @@
         public double? MotoLat { get; set; }
         public double? MotoLng { get; set; }
         public string? Comment { get; set; }
+        public bool RequiresSampling { get; set; } = false;
         public AddressDto? Address { get; set; }
         public UserSummaryDto? Motorizado { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();

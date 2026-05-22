@@ -38,7 +38,6 @@ namespace BackendLimpio.Models
         public Guid? MotorizadoId { get; set; }
         public Usuario? Motorizado { get; set; }
 
-        // 🔥 AGREGA ESTO
         public Guid? AddressId { get; set; }
 
         [ForeignKey("AddressId")]
@@ -46,5 +45,7 @@ namespace BackendLimpio.Models
 
         public double? MotoLat { get; set; }
         public double? MotoLng { get; set; }
+
+        public bool RequiresSampling { get; set; } = false;
     }
 }
