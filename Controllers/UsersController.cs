@@ -27,7 +27,7 @@ namespace BackendLimpio.Controllers
         }
 
         [HttpGet("admins")]
-        [Authorize(Roles = "admin")]
+        [Authorize]
         public async Task<IActionResult> GetAdmins()
         {
             var admins = await _context.Usuarios
