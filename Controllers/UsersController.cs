@@ -49,5 +49,16 @@ namespace BackendLimpio.Controllers
 
             return Ok(user);
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            var user = await _context.Usuarios.FindAsync(id);
+            if (user == null) return NotFound();
+            _context.Usuarios.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Usuario eliminado" });
+        }
     }
 }
