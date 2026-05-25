@@ -51,6 +51,7 @@ namespace BackendLimpio.Controllers
                     Status = OrderStatus.Pending,
                     CreatedAt = DateTime.UtcNow,
                     AddressId = request.AddressId == Guid.Empty ? null : request.AddressId,
+                    Comment = request.Comment,
                     RequiresSampling = request.RequiresSampling
                 };
 
