@@ -188,6 +188,7 @@ namespace BackendLimpio.Controllers
                     MotoLat = o.MotoLat,
                     MotoLng = o.MotoLng,
                     Comment = o.Comment,
+                    StaffComment = o.StaffComment,
                     RequiresSampling = o.RequiresSampling,
 
                     Address = o.Address != null ? new AddressDto
@@ -352,10 +353,10 @@ namespace BackendLimpio.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
 
-            order.Comment = request.Comment;
+            order.StaffComment = request.Comment;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Comentario actualizado", comment = order.Comment });
+            return Ok(new { message = "Comentario actualizado", staffComment = order.StaffComment });
         }
 
         [Authorize(Roles = "admin")]

@@ -26,6 +26,8 @@ namespace BackendLimpio.Models
 
         public string? Comment { get; set; }
 
+        public string? StaffComment { get; set; }
+
         public string? InvoicePdfUrl { get; set; }
         public string? ResultPdfUrl { get; set; }
 
