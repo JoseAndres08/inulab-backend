@@ -346,6 +346,19 @@ namespace BackendLimpio.Controllers
         }
 
         [Authorize(Roles = "admin")]
+        [HttpPut("{id}/comment")]
+        public async Task<IActionResult> UpdateComment(Guid id, [FromBody] UpdateCommentRequest request)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound("Orden no encontrada");
+
+            order.Comment = request.Comment;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Comentario actualizado", comment = order.Comment });
+        }
+
+        [Authorize(Roles = "admin")]
         [HttpPut("{id}/assign-motorizado")]
         public async Task<IActionResult> AssignMotorizado(Guid id, [FromBody] AssignMotorizadoRequest request)
         {
@@ -395,6 +408,11 @@ namespace BackendLimpio.Controllers
     public class UpdateStatusRequest
     {
         public required string Status { get; set; }
+    }
+
+    public class UpdateCommentRequest
+    {
+        public string? Comment { get; set; }
     }
 
     public class AssignMotorizadoRequest
