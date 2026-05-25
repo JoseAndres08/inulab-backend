@@ -26,6 +26,17 @@ namespace BackendLimpio.Controllers
             return Ok(doctors);
         }
 
+        [HttpGet("admins")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAdmins()
+        {
+            var admins = await _context.Usuarios
+                .Where(u => u.Type == "admin")
+                .Select(u => new { u.Id, u.Username })
+                .ToListAsync();
+            return Ok(admins);
+        }
+
         [HttpGet("motorizados")]
         public async Task<IActionResult> GetMotorizados()
         {
