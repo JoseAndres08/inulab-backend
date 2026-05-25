@@ -26,7 +26,7 @@ namespace BackendLimpio.Controllers
             return Ok(doctors);
         }
 
-        [HttpGet("admins")]
+        [HttpGet("lista-admins")]
         [Authorize]
         public async Task<IActionResult> GetAdmins()
         {
