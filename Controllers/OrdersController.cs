@@ -85,6 +85,31 @@ namespace BackendLimpio.Controllers
                 _context.OrderItems.AddRange(itemsToCreate);
                 await _context.SaveChangesAsync();
 
+                // Auto-asignar al motorizado con menos pedidos activos
+                var motorizados = await _context.Usuarios
+                    .Where(u => u.Type == "motorizado")
+                    .ToListAsync();
+
+                if (motorizados.Any())
+                {
+                    var motoConMenosPedidos = motorizados
+                        .OrderBy(m => _context.Orders
+                            .Count(o => o.MotorizadoId == m.Id &&
+                                (o.Status == OrderStatus.Assigned ||
+                                 o.Status == OrderStatus.MotoEnCamino ||
+                                 o.Status == OrderStatus.MotoArrived ||
+                                 o.Status == OrderStatus.PickupInProgress ||
+                                 o.Status == OrderStatus.SampleReceived)))
+                        .FirstOrDefault();
+
+                    if (motoConMenosPedidos != null)
+                    {
+                        order.MotorizadoId = motoConMenosPedidos.Id;
+                        order.Status = OrderStatus.Assigned;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 return Ok(order);
             }
             catch (Exception ex)
