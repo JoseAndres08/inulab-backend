@@ -51,5 +51,7 @@ namespace BackendLimpio.Models
         public double? MotoLng { get; set; }
 
         public bool RequiresSampling { get; set; } = false;
+
+        public bool IsManual { get; set; } = false;
     }
 }

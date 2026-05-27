@@ -58,7 +58,6 @@ namespace BackendLimpio.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                // Guardar historial estado inicial
                 _context.OrderStatusHistories.Add(new OrderStatusHistory
                 {
                     Id = Guid.NewGuid(),
@@ -100,7 +99,6 @@ namespace BackendLimpio.Controllers
                 _context.OrderItems.AddRange(itemsToCreate);
                 await _context.SaveChangesAsync();
 
-                // Auto-asignar al motorizado con menos pedidos activos
                 var motorizados = await _context.Usuarios
                     .Where(u => u.Type == "motorizado")
                     .ToListAsync();
@@ -175,7 +173,10 @@ namespace BackendLimpio.Controllers
                     .Include(o => o.StatusHistories);
 
                 if (role == "motorizado" && userId.HasValue)
+                {
+                    // Motorizado ve sus pedidos — los manuales solo informativos (igual los recibe, el front los muestra sin botones)
                     query = query.Where(o => o.MotorizadoId == userId.Value);
+                }
                 else if (role == "cliente" || role == "medico" || role == "dueño")
                 {
                     if (!userId.HasValue)
@@ -219,6 +220,7 @@ namespace BackendLimpio.Controllers
                     Comment = o.Comment,
                     StaffComment = o.StaffComment,
                     RequiresSampling = o.RequiresSampling,
+                    IsManual = o.IsManual,
 
                     Address = o.Address != null ? new AddressDto
                     {
@@ -302,6 +304,19 @@ namespace BackendLimpio.Controllers
             if (order.MotoLat == null) return Ok(new { lat = (double?)null, lng = (double?)null });
 
             return Ok(new { lat = order.MotoLat, lng = order.MotoLng });
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}/manual")]
+        public async Task<IActionResult> SetManual(Guid id, [FromBody] SetManualRequest request)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound("Orden no encontrada");
+
+            order.IsManual = request.IsManual;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Modo manual actualizado", isManual = order.IsManual });
         }
 
         [Authorize(Roles = "admin")]
@@ -469,6 +484,11 @@ namespace BackendLimpio.Controllers
     public class UpdateCommentRequest
     {
         public string? Comment { get; set; }
+    }
+
+    public class SetManualRequest
+    {
+        public bool IsManual { get; set; }
     }
 
     public class AssignMotorizadoRequest
