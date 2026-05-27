@@ -21,6 +21,13 @@
         public AddressDto? Address { get; set; }
         public UserSummaryDto? Motorizado { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
+        public List<StatusHistoryDto> StatusHistory { get; set; } = new();
+    }
+
+    public class StatusHistoryDto
+    {
+        public int Status { get; set; }
+        public DateTime ChangedAt { get; set; }
     }
 
     public class OrderItemDto

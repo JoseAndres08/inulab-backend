@@ -37,6 +37,8 @@ namespace BackendLimpio.Models
 
         public List<OrderItem> Items { get; set; } = new();
 
+        public List<OrderStatusHistory> StatusHistories { get; set; } = new();
+
         public Guid? MotorizadoId { get; set; }
         public Usuario? Motorizado { get; set; }
 

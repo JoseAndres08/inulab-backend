@@ -58,6 +58,20 @@ namespace BackendLimpio.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Guardar historial estado inicial
+                _context.OrderStatusHistories.Add(new OrderStatusHistory
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = order.Id,
+                    PreviousStatus = OrderStatus.Pending,
+                    NewStatus = OrderStatus.Pending,
+                    ChangedByUserId = userId,
+                    ChangedByUsername = user?.Username,
+                    ChangedByRole = "cliente",
+                    ChangedAt = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
                 var itemsToCreate = request.Items != null && request.Items.Count > 0
                     ? request.Items.Select(i => new OrderItem
                     {
@@ -105,8 +119,22 @@ namespace BackendLimpio.Controllers
 
                     if (motoConMenosPedidos != null)
                     {
+                        var prevStatus = order.Status;
                         order.MotorizadoId = motoConMenosPedidos.Id;
                         order.Status = OrderStatus.Assigned;
+
+                        _context.OrderStatusHistories.Add(new OrderStatusHistory
+                        {
+                            Id = Guid.NewGuid(),
+                            OrderId = order.Id,
+                            PreviousStatus = prevStatus,
+                            NewStatus = OrderStatus.Assigned,
+                            ChangedByUserId = userId,
+                            ChangedByUsername = "sistema",
+                            ChangedByRole = "sistema",
+                            ChangedAt = DateTime.UtcNow
+                        });
+
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -143,7 +171,8 @@ namespace BackendLimpio.Controllers
                     .Include(o => o.Items)
                         .ThenInclude(i => i.Address)
                     .Include(o => o.Items)
-                        .ThenInclude(i => i.Pet);
+                        .ThenInclude(i => i.Pet)
+                    .Include(o => o.StatusHistories);
 
                 if (role == "motorizado" && userId.HasValue)
                     query = query.Where(o => o.MotorizadoId == userId.Value);
@@ -218,7 +247,16 @@ namespace BackendLimpio.Controllers
                                    i.Pet?.Species == "conejo" ? "🐰" : "🐾",
                         PetOwner = "",
                         PdfUrl = i.PdfUrl
-                    }).ToList()
+                    }).ToList(),
+
+                    StatusHistory = o.StatusHistories?
+                        .OrderBy(h => h.ChangedAt)
+                        .Select(h => new StatusHistoryDto
+                        {
+                            Status = (int)h.NewStatus,
+                            ChangedAt = h.ChangedAt
+                        }).ToList() ?? new List<StatusHistoryDto>()
+
                 }).ToList();
 
                 return Ok(new { orders = result });
@@ -315,6 +353,11 @@ namespace BackendLimpio.Controllers
                 var order = await _context.Orders.FindAsync(id);
                 if (order == null) return NotFound("Orden no encontrada");
 
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var username = User.FindFirstValue(ClaimTypes.Name) ?? "staff";
+                var role = User.FindFirstValue(ClaimTypes.Role) ?? "admin";
+                var prevStatus = order.Status;
+
                 var statusLower = request.Status.ToLower();
 
                 OrderStatus newStatus = statusLower switch
@@ -335,6 +378,18 @@ namespace BackendLimpio.Controllers
                 order.Status = newStatus;
                 if (newStatus == OrderStatus.Completed)
                     order.CompletedAt = DateTime.UtcNow;
+
+                _context.OrderStatusHistories.Add(new OrderStatusHistory
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = order.Id,
+                    PreviousStatus = prevStatus,
+                    NewStatus = newStatus,
+                    ChangedByUserId = userId,
+                    ChangedByUsername = username,
+                    ChangedByRole = role,
+                    ChangedAt = DateTime.UtcNow
+                });
 
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "Estado actualizado", order });
