@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-
 namespace BackendLimpio.Controllers
 {
     [ApiController]
@@ -34,6 +33,7 @@ namespace BackendLimpio.Controllers
                 .Select(p => new {
                     p.Id,
                     p.Name,
+                    p.LastName,
                     p.Species,
                     p.Breed,
                     p.Age,
@@ -64,6 +64,7 @@ namespace BackendLimpio.Controllers
                 .Select(p => new {
                     p.Id,
                     p.Name,
+                    p.LastName,
                     p.Species,
                     p.Breed,
                     p.Age,
@@ -96,6 +97,7 @@ namespace BackendLimpio.Controllers
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
+                LastName = dto.LastName,
                 Species = dto.Species,
                 Breed = dto.Breed,
                 Age = dto.Age,

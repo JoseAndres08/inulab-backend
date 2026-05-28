@@ -19,9 +19,9 @@ namespace BackendLimpio.Models
 
         public string Sex { get; set; } = "";
 
+        public string LastName { get; set; } = "";
+
         [Column("UserId")]
         public Guid UserId { get; set; }
-
-        
     }
 }
