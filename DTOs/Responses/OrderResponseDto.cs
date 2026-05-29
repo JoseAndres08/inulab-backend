@@ -19,6 +19,8 @@
         public string? StaffComment { get; set; }
         public bool RequiresSampling { get; set; } = false;
         public bool IsManual { get; set; } = false;
+        public bool InvoiceRequested { get; set; } = false;
+        public string DocumentType { get; set; } = "boleta";
         public AddressDto? Address { get; set; }
         public UserSummaryDto? Motorizado { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();

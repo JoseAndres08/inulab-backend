@@ -52,7 +52,9 @@ namespace BackendLimpio.Controllers
                     CreatedAt = DateTime.UtcNow,
                     AddressId = request.AddressId == Guid.Empty ? null : request.AddressId,
                     Comment = request.Comment,
-                    RequiresSampling = request.RequiresSampling
+                    RequiresSampling = request.RequiresSampling,
+                    InvoiceRequested = request.InvoiceRequested,
+                    DocumentType = request.DocumentType ?? "boleta",
                 };
 
                 _context.Orders.Add(order);
@@ -174,7 +176,6 @@ namespace BackendLimpio.Controllers
 
                 if (role == "motorizado" && userId.HasValue)
                 {
-                    // Motorizado ve sus pedidos — los manuales solo informativos (igual los recibe, el front los muestra sin botones)
                     query = query.Where(o => o.MotorizadoId == userId.Value);
                 }
                 else if (role == "cliente" || role == "medico" || role == "dueño")
@@ -221,6 +222,8 @@ namespace BackendLimpio.Controllers
                     StaffComment = o.StaffComment,
                     RequiresSampling = o.RequiresSampling,
                     IsManual = o.IsManual,
+                    InvoiceRequested = o.InvoiceRequested,
+                    DocumentType = o.DocumentType,
 
                     Address = o.Address != null ? new AddressDto
                     {
@@ -465,6 +468,7 @@ namespace BackendLimpio.Controllers
         public Guid? PetId { get; set; }
         public string? Comment { get; set; }
         public string? DocumentType { get; set; }
+        public bool InvoiceRequested { get; set; } = false;
         public List<OrderItemRequest>? Items { get; set; }
         public bool RequiresSampling { get; set; } = false;
     }

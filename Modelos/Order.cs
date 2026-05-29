@@ -53,5 +53,9 @@ namespace BackendLimpio.Models
         public bool RequiresSampling { get; set; } = false;
 
         public bool IsManual { get; set; } = false;
+
+        public bool InvoiceRequested { get; set; } = false;
+
+        public string DocumentType { get; set; } = "boleta";
     }
 }
