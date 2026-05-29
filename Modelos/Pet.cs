@@ -23,5 +23,7 @@ namespace BackendLimpio.Models
 
         [Column("UserId")]
         public Guid UserId { get; set; }
+
+        public Guid? UsuarioId { get; set; }
     }
 }
