@@ -61,6 +61,26 @@ namespace BackendLimpio.Controllers
             return Ok(user);
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
+        {
+            var user = await _context.Usuarios.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(request.Username))
+                user.Username = request.Username;
+
+            if (!string.IsNullOrWhiteSpace(request.Nombre))
+                user.Name = request.Nombre;
+
+            if (!string.IsNullOrWhiteSpace(request.Password))
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Usuario actualizado" });
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(Guid id)
@@ -71,5 +91,12 @@ namespace BackendLimpio.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Usuario eliminado" });
         }
+    }
+
+    public class UpdateUserRequest
+    {
+        public string? Username { get; set; }
+        public string? Nombre { get; set; }
+        public string? Password { get; set; }
     }
 }
