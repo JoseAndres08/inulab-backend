@@ -11,5 +11,6 @@
         public string? ClinicName { get; set; }
         public string? Ruc { get; set; }
         public string? District { get; set; }
+        public string? LastName { get; set; }
     }
 }

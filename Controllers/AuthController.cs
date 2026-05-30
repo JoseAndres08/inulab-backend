@@ -24,9 +24,6 @@ namespace BackendLimpio.Controllers
             _jwtServicio = jwtServicio;
         }
 
-        // ==========================
-        // REGISTER
-        // ==========================
         [HttpPost("registrarse")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
@@ -56,6 +53,7 @@ namespace BackendLimpio.Controllers
                 Phone = request.Phone ?? string.Empty,
                 Dni = request.Dni,
                 Name = request.ClinicName ?? string.Empty,
+                LastName = request.LastName ?? string.Empty,
                 Clinic = request.ClinicName ?? string.Empty,
                 ProfileDistrict = request.District ?? string.Empty,
                 Ruc = request.Ruc ?? string.Empty
@@ -67,9 +65,6 @@ namespace BackendLimpio.Controllers
             return Ok("Usuario registrado correctamente");
         }
 
-        // ==========================
-        // LOGIN
-        // ==========================
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
@@ -95,6 +90,7 @@ namespace BackendLimpio.Controllers
                     type = usuario.Type,
                     email = usuario.Email,
                     name = usuario.Name,
+                    lastName = usuario.LastName,
                     clinic = usuario.Clinic,
                     district = usuario.ProfileDistrict,
                     ruc = usuario.Ruc,
@@ -104,9 +100,6 @@ namespace BackendLimpio.Controllers
             });
         }
 
-        // ==========================
-        // PERFIL USUARIO
-        // ==========================
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> Me()
@@ -127,6 +120,7 @@ namespace BackendLimpio.Controllers
                         type = usuario.Type,
                         email = usuario.Email,
                         name = usuario.Name,
+                        lastName = usuario.LastName,
                         district = usuario.ProfileDistrict,
                         ruc = usuario.Ruc,
                         phone = usuario.Phone,
@@ -138,14 +132,42 @@ namespace BackendLimpio.Controllers
             return Unauthorized("Usuario no encontrado");
         }
 
-        // ==========================
-        // SOLO ADMIN
-        // ==========================
+        [Authorize]
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var userIdGuid)) return Unauthorized();
+
+            var usuario = await _context.Usuarios.FindAsync(userIdGuid);
+            if (usuario == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(request.Name))
+                usuario.Name = request.Name;
+            if (!string.IsNullOrWhiteSpace(request.LastName))
+                usuario.LastName = request.LastName;
+            if (!string.IsNullOrWhiteSpace(request.Phone))
+                usuario.Phone = request.Phone;
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                usuario.Email = request.Email;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Perfil actualizado", lastName = usuario.LastName });
+        }
+
         [Authorize(Roles = "admin")]
         [HttpGet("solo-admin")]
         public IActionResult SoloAdmin()
         {
             return Ok("Acceso exclusivo para administradores");
         }
+    }
+
+    public class UpdateProfileRequest
+    {
+        public string? Name { get; set; }
+        public string? LastName { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
     }
 }
