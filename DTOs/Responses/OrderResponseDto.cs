@@ -40,6 +40,7 @@
         public string AddressDistrict { get; set; } = "";
         public Guid? PetId { get; set; }
         public string PetName { get; set; } = "";
+        public string PetLastName { get; set; } = "";
         public string PetPhoto { get; set; } = "";
         public string PetOwner { get; set; } = "";
         public string? PdfUrl { get; set; }

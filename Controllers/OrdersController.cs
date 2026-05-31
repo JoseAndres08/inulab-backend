@@ -246,6 +246,7 @@ namespace BackendLimpio.Controllers
                         AddressDistrict = i.Address?.District ?? "Distrito no especificado",
                         PetId = i.PetId,
                         PetName = i.Pet?.Name ?? "",
+                        PetLastName = i.Pet?.LastName ?? "",
                         PetPhoto = i.Pet?.Species == "perro" ? "🐶" :
                                    i.Pet?.Species == "gato" ? "🐱" :
                                    i.Pet?.Species == "ave" ? "🦜" :
