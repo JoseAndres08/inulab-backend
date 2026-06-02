@@ -155,6 +155,29 @@ namespace BackendLimpio.Controllers
             return Ok(new { message = "Perfil actualizado", lastName = usuario.LastName });
         }
 
+        [Authorize]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var userIdGuid)) return Unauthorized();
+
+            var usuario = await _context.Usuarios.FindAsync(userIdGuid);
+            if (usuario == null) return NotFound();
+
+            // Verificar contraseña actual
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, usuario.PasswordHash))
+                return BadRequest("La contraseña actual es incorrecta");
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+                return BadRequest("La nueva contraseña debe tener al menos 6 caracteres");
+
+            usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña actualizada correctamente" });
+        }
+
         [Authorize(Roles = "admin")]
         [HttpGet("solo-admin")]
         public IActionResult SoloAdmin()
@@ -169,5 +192,11 @@ namespace BackendLimpio.Controllers
         public string? LastName { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

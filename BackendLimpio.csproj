@@ -27,7 +27,8 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\facturas\" />
+    <Folder Include="wwwroot\results\" />
   </ItemGroup>
 
 </Project>

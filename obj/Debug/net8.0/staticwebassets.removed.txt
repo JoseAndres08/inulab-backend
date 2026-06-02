@@ -1,0 +1,14 @@
+C:\Proyectos\BackendLimpio\wwwroot\facturas\factura_2c6adbb5-105f-4949-a54e-bff4d5158b08.pdf
+C:\Proyectos\BackendLimpio\wwwroot\facturas\factura_6a208714-7e71-4e52-8269-20c6dbabdab2.pdf
+C:\Proyectos\BackendLimpio\wwwroot\facturas\factura_6eaec2e0-ace7-488b-bc6a-2a8a9bdb4547.pdf
+C:\Proyectos\BackendLimpio\wwwroot\facturas\factura_752eb00d-9fa9-42ff-8f17-eb18bef71d05.pdf
+C:\Proyectos\BackendLimpio\wwwroot\facturas\factura_d4311f57-d6b5-403f-9156-22a4938a33b2.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\2036cfe4-0641-4ba1-86f7-f4297d48e93d.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\4eb7df5b-a054-4e5a-a043-c867a776e78c.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\60196bca-8db5-45b4-aba7-9649d562028d.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\63856738-51b5-448e-b2fa-84709d0b4f1f.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\6d6039ec-af72-46da-ab3b-ad0b32063b6a.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\8b6134ca-21d9-49d0-a2bb-fdf615a5d9e6.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\c20107dd-d55a-4619-8284-f0f4de3cd1e8.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\f1a2216f-d2c1-4271-83cb-57cec769a6d7.pdf
+C:\Proyectos\BackendLimpio\wwwroot\results\fa9272a3-3c97-415b-8b7a-361a7e1548a2.pdf
