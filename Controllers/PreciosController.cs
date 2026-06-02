@@ -34,19 +34,32 @@ namespace BackendLimpio.Controllers
 
             if (existente == null)
             {
-                var nuevo = new ExamenPrecio
+                _context.ExamenesPrecio.Add(new ExamenPrecio
                 {
                     ExamenId = examenId,
                     Nombre = dto.Nombre,
                     TipoUsuario = dto.TipoUsuario,
                     Precio = dto.Precio,
+                    Especie = dto.Especie,
+                    RequiereTomaMuestra = dto.RequiereTomaMuestra,
+                    TiempoEntrega = dto.TiempoEntrega,
+                    Descripcion = dto.Descripcion,
+                    Categoria = dto.Categoria,
                     UpdatedAt = DateTime.UtcNow
-                };
-                _context.ExamenesPrecio.Add(nuevo);
+                });
             }
             else
             {
                 existente.Precio = dto.Precio;
+                if (!string.IsNullOrWhiteSpace(dto.Especie))
+                    existente.Especie = dto.Especie;
+                existente.RequiereTomaMuestra = dto.RequiereTomaMuestra;
+                if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega))
+                    existente.TiempoEntrega = dto.TiempoEntrega;
+                if (!string.IsNullOrWhiteSpace(dto.Descripcion))
+                    existente.Descripcion = dto.Descripcion;
+                if (!string.IsNullOrWhiteSpace(dto.Categoria))
+                    existente.Categoria = dto.Categoria;
                 existente.UpdatedAt = DateTime.UtcNow;
             }
 
@@ -70,12 +83,26 @@ namespace BackendLimpio.Controllers
                         Nombre = dto.Nombre,
                         TipoUsuario = dto.TipoUsuario,
                         Precio = dto.Precio,
+                        Especie = dto.Especie,
+                        RequiereTomaMuestra = dto.RequiereTomaMuestra,
+                        TiempoEntrega = dto.TiempoEntrega,
+                        Descripcion = dto.Descripcion,
+                        Categoria = dto.Categoria,
                         UpdatedAt = DateTime.UtcNow
                     });
                 }
                 else
                 {
                     existente.Precio = dto.Precio;
+                    if (!string.IsNullOrWhiteSpace(dto.Especie))
+                        existente.Especie = dto.Especie;
+                    existente.RequiereTomaMuestra = dto.RequiereTomaMuestra;
+                    if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega))
+                        existente.TiempoEntrega = dto.TiempoEntrega;
+                    if (!string.IsNullOrWhiteSpace(dto.Descripcion))
+                        existente.Descripcion = dto.Descripcion;
+                    if (!string.IsNullOrWhiteSpace(dto.Categoria))
+                        existente.Categoria = dto.Categoria;
                     existente.UpdatedAt = DateTime.UtcNow;
                 }
             }
@@ -91,5 +118,10 @@ namespace BackendLimpio.Controllers
         public string Nombre { get; set; } = string.Empty;
         public string TipoUsuario { get; set; } = "medico";
         public decimal Precio { get; set; }
+        public string Especie { get; set; } = "ambos";
+        public bool RequiereTomaMuestra { get; set; } = true;
+        public string TiempoEntrega { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
     }
 }
