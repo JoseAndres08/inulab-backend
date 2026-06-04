@@ -44,6 +44,7 @@
         public string PetPhoto { get; set; } = "";
         public string PetOwner { get; set; } = "";
         public string? PdfUrl { get; set; }
+        public bool TomaMuestra { get; set; } = false;
     }
 
     public class AddressDto

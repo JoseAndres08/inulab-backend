@@ -16,7 +16,6 @@ namespace BackendLimpio.Models
 
         public string? PdfUrl { get; set; }
 
-        // 🔥 NUEVO
         public Guid? AddressId { get; set; }
 
         [ForeignKey("AddressId")]
@@ -26,5 +25,7 @@ namespace BackendLimpio.Models
 
         [ForeignKey("PetId")]
         public Pet? Pet { get; set; }
+
+        public bool TomaMuestra { get; set; } = false;
     }
 }

@@ -84,7 +84,8 @@ namespace BackendLimpio.Controllers
                                     : (request.AddressId != Guid.Empty ? request.AddressId : (Guid?)null),
                         PetId = (i.PetId.HasValue && i.PetId != Guid.Empty)
                                 ? i.PetId
-                                : (request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null)
+                                : (request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null),
+                        TomaMuestra = i.TomaMuestra
                     }).ToList()
                     : new List<OrderItem>
                     {
@@ -94,7 +95,8 @@ namespace BackendLimpio.Controllers
                             OrderId = order.Id,
                             ExamName = request.ExamName ?? "Examen general",
                             AddressId = request.AddressId != Guid.Empty ? request.AddressId : (Guid?)null,
-                            PetId = request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null
+                            PetId = request.PetId.HasValue && request.PetId != Guid.Empty ? request.PetId : (Guid?)null,
+                            TomaMuestra = false
                         }
                     };
 
@@ -252,7 +254,8 @@ namespace BackendLimpio.Controllers
                                    i.Pet?.Species == "ave" ? "🦜" :
                                    i.Pet?.Species == "conejo" ? "🐰" : "🐾",
                         PetOwner = "",
-                        PdfUrl = i.PdfUrl
+                        PdfUrl = i.PdfUrl,
+                        TomaMuestra = i.TomaMuestra
                     }).ToList(),
 
                     StatusHistory = o.StatusHistories?
@@ -479,6 +482,7 @@ namespace BackendLimpio.Controllers
         public string? ExamName { get; set; }
         public Guid? PetId { get; set; }
         public Guid? AddressId { get; set; }
+        public bool TomaMuestra { get; set; } = false;
     }
 
     public class UpdateStatusRequest
