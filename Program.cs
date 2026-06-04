@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,17 +46,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // ==========================
-// CORS
+// CORS — solo orígenes conocidos
 // ==========================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(
+                "https://inulab-staff.vercel.app",
+                "https://inulab-client.vercel.app",
+                "http://localhost:5173",
+                "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
+});
+
+// ==========================
+// RATE LIMITING — login
+// ==========================
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
 });
 
 // ==========================
@@ -113,10 +137,34 @@ var app = builder.Build();
 // ==========================
 // PIPELINE
 // ==========================
-app.UseSwagger();
-app.UseSwaggerUI();
+
+// IP real detrás de proxy (Railway)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// Manejo global de excepciones — nunca devolver 500 con stack trace
+app.UseExceptionHandler(errApp =>
+{
+    errApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsync("{\"title\":\"Ocurrió un error\",\"status\":500}");
+    });
+});
+
+// Swagger SOLO en desarrollo
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseStaticFiles();
+
+app.UseRateLimiter();
 
 app.UseCors("FrontendPolicy");
 

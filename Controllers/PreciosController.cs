@@ -19,7 +19,7 @@ namespace BackendLimpio.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> GetPrecios()
         {
             var precios = await _context.ExamenesPrecio.ToListAsync();

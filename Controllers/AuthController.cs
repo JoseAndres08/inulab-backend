@@ -5,6 +5,7 @@ using BackendLimpio.Servicios;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System.Security.Claims;
@@ -65,6 +66,7 @@ namespace BackendLimpio.Controllers
             return Ok("Usuario registrado correctamente");
         }
 
+        [EnableRateLimiting("login")]
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
@@ -165,7 +167,6 @@ namespace BackendLimpio.Controllers
             var usuario = await _context.Usuarios.FindAsync(userIdGuid);
             if (usuario == null) return NotFound();
 
-            // Verificar contraseña actual
             if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, usuario.PasswordHash))
                 return BadRequest("La contraseña actual es incorrecta");
 
