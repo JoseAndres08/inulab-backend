@@ -73,35 +73,34 @@ namespace BackendLimpio.Controllers
             }
 
             await _context.SaveChangesAsync();
-            _cache.Remove(CACHE_KEY); // invalidar caché al actualizar
+            _cache.Remove(CACHE_KEY);
             return Ok(new { examenId, precio = dto.Precio });
         }
 
         [HttpPost("bulk")]
         public async Task<IActionResult> BulkUpdate([FromBody] List<UpdatePrecioDto> dtos)
         {
+            if (dtos == null || dtos.Count == 0)
+                return BadRequest("Lista vacía");
+
+            // 1 sola query: traer todos los existentes de una vez
+            var ids = dtos.Select(d => d.ExamenId).Distinct().ToList();
+            var tipos = dtos.Select(d => d.TipoUsuario).Distinct().ToList();
+
+            var existentes = await _context.ExamenesPrecio
+                .Where(e => ids.Contains(e.ExamenId) && tipos.Contains(e.TipoUsuario))
+                .ToListAsync();
+
+            var existentesMap = existentes
+                .ToDictionary(e => $"{e.ExamenId}_{e.TipoUsuario}");
+
+            var nuevos = new List<ExamenPrecio>();
+
             foreach (var dto in dtos)
             {
-                var existente = await _context.ExamenesPrecio
-                    .FirstOrDefaultAsync(e => e.ExamenId == dto.ExamenId && e.TipoUsuario == dto.TipoUsuario);
+                var key = $"{dto.ExamenId}_{dto.TipoUsuario}";
 
-                if (existente == null)
-                {
-                    _context.ExamenesPrecio.Add(new ExamenPrecio
-                    {
-                        ExamenId = dto.ExamenId,
-                        Nombre = dto.Nombre,
-                        TipoUsuario = dto.TipoUsuario,
-                        Precio = dto.Precio,
-                        Especie = dto.Especie,
-                        RequiereTomaMuestra = dto.RequiereTomaMuestra,
-                        TiempoEntrega = dto.TiempoEntrega,
-                        Descripcion = dto.Descripcion,
-                        Categoria = dto.Categoria,
-                        UpdatedAt = DateTime.UtcNow
-                    });
-                }
-                else
+                if (existentesMap.TryGetValue(key, out var existente))
                 {
                     existente.Precio = dto.Precio;
                     if (!string.IsNullOrWhiteSpace(dto.Especie))
@@ -115,11 +114,32 @@ namespace BackendLimpio.Controllers
                         existente.Categoria = dto.Categoria;
                     existente.UpdatedAt = DateTime.UtcNow;
                 }
+                else
+                {
+                    nuevos.Add(new ExamenPrecio
+                    {
+                        ExamenId = dto.ExamenId,
+                        Nombre = dto.Nombre,
+                        TipoUsuario = dto.TipoUsuario,
+                        Precio = dto.Precio,
+                        Especie = dto.Especie,
+                        RequiereTomaMuestra = dto.RequiereTomaMuestra,
+                        TiempoEntrega = dto.TiempoEntrega,
+                        Descripcion = dto.Descripcion,
+                        Categoria = dto.Categoria,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
             }
 
+            if (nuevos.Count > 0)
+                _context.ExamenesPrecio.AddRange(nuevos);
+
+            // 1 sola query al final para todo
             await _context.SaveChangesAsync();
-            _cache.Remove(CACHE_KEY); // invalidar caché al actualizar bulk
-            return Ok(new { updated = dtos.Count });
+            _cache.Remove(CACHE_KEY);
+
+            return Ok(new { updated = existentes.Count, created = nuevos.Count });
         }
     }
 
