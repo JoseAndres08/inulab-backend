@@ -3,7 +3,7 @@ using BackendLimpio.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BackendLimpio.Controllers
 {
@@ -12,17 +12,26 @@ namespace BackendLimpio.Controllers
     public class PreciosController : ControllerBase
     {
         private readonly InulaDbContext _context;
+        private readonly IMemoryCache _cache;
+        private const string CACHE_KEY = "precios_catalogo";
 
-        public PreciosController(InulaDbContext context)
+        public PreciosController(InulaDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetPrecios()
         {
+            if (_cache.TryGetValue(CACHE_KEY, out List<ExamenPrecio>? cached) && cached != null)
+                return Ok(cached);
+
             var precios = await _context.ExamenesPrecio.ToListAsync();
+
+            _cache.Set(CACHE_KEY, precios, TimeSpan.FromMinutes(30));
+
             return Ok(precios);
         }
 
@@ -64,6 +73,7 @@ namespace BackendLimpio.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _cache.Remove(CACHE_KEY); // invalidar caché al actualizar
             return Ok(new { examenId, precio = dto.Precio });
         }
 
@@ -108,6 +118,7 @@ namespace BackendLimpio.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _cache.Remove(CACHE_KEY); // invalidar caché al actualizar bulk
             return Ok(new { updated = dtos.Count });
         }
     }

@@ -85,6 +85,7 @@ builder.Services.AddRateLimiter(options =>
 // SERVICIOS
 // ==========================
 builder.Services.AddScoped<JwtServicio>();
+builder.Services.AddMemoryCache();
 
 // ==========================
 // CONTROLADORES
