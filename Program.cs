@@ -12,10 +12,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 var builder = WebApplication.CreateBuilder(args);
 
 // ==========================
-// BASE DE DATOS (POSTGRESQL)
+// BASE DE DATOS (SQL SERVER)
 // ==========================
 builder.Services.AddDbContext<InulaDbContext>(options =>
-    options.UseNpgsql(
+    options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
