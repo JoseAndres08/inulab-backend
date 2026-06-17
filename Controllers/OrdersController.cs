@@ -326,7 +326,9 @@ namespace BackendLimpio.Controllers
                 {
                     File = new FileDescription(file.FileName, stream),
                     PublicId = $"inulab/results/{id}",
-                    Overwrite = true
+                    Overwrite = true,
+                    Type = "upload",
+                    AccessMode = "public"
                 };
 
                 var uploadResult = await _cloudinary.UploadAsync(uploadParams);
