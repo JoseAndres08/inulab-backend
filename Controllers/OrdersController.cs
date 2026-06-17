@@ -1,17 +1,12 @@
-﻿using Azure;
-using BackendLimpio.Datos;
+﻿using BackendLimpio.Datos;
 using BackendLimpio.DTOs.Common;
 using BackendLimpio.DTOs.Responses;
 using BackendLimpio.Models;
-using iText.Forms.Form.Element;
-using iText.IO.Exceptions;
-using iText.Kernel.Geom;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
-using Org.BouncyCastle.Utilities.IO;
-using System.Drawing.Drawing2D;
 using System.Security.Claims;
 using SystemPath = System.IO.Path;
 
@@ -23,10 +18,14 @@ namespace BackendLimpio.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly InulaDbContext _context;
+        private readonly Cloudinary _cloudinary;
 
         public OrdersController(InulaDbContext context)
         {
             _context = context;
+            var account = new Account("dfuzlltmk", "216388186713139", "XvPdNDkcBJWFKbU2dke3DiYZk7Q");
+            _cloudinary = new Cloudinary(account);
+            _cloudinary.Api.Secure = true;
         }
 
         [Authorize(Roles = "cliente,medico,dueño")]
@@ -177,9 +176,7 @@ namespace BackendLimpio.Controllers
                     .Include(o => o.StatusHistories);
 
                 if (role == "motorizado" && userId.HasValue)
-                {
                     query = query.Where(o => o.MotorizadoId == userId.Value);
-                }
                 else if (role == "cliente" || role == "medico" || role == "dueño")
                 {
                     if (!userId.HasValue)
@@ -226,21 +223,18 @@ namespace BackendLimpio.Controllers
                     IsManual = o.IsManual,
                     InvoiceRequested = o.InvoiceRequested,
                     DocumentType = o.DocumentType,
-
                     Address = o.Address != null ? new AddressDto
                     {
                         Id = o.Address.Id,
                         Street = o.Address.Street ?? "N/A",
                         District = o.Address.District ?? "N/A"
                     } : null,
-
                     Motorizado = o.Motorizado == null ? null : new UserSummaryDto
                     {
                         Id = o.Motorizado.Id,
                         Username = o.Motorizado.Username,
                         Type = o.Motorizado.Type
                     },
-
                     Items = o.Items.Select(i => new OrderItemDto
                     {
                         ExamName = i.ExamName,
@@ -257,7 +251,6 @@ namespace BackendLimpio.Controllers
                         PdfUrl = i.PdfUrl,
                         TomaMuestra = i.TomaMuestra
                     }).ToList(),
-
                     StatusHistory = o.StatusHistories?
                         .OrderBy(h => h.ChangedAt)
                         .Select(h => new StatusHistoryDto
@@ -265,7 +258,6 @@ namespace BackendLimpio.Controllers
                             Status = (int)h.NewStatus,
                             ChangedAt = h.ChangedAt
                         }).ToList() ?? new List<StatusHistoryDto>()
-
                 }).ToList();
 
                 return Ok(new { orders = result });
@@ -290,11 +282,9 @@ namespace BackendLimpio.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
-
             order.MotoLat = request.Lat;
             order.MotoLng = request.Lng;
             await _context.SaveChangesAsync();
-
             return Ok(new { lat = request.Lat, lng = request.Lng });
         }
 
@@ -306,10 +296,8 @@ namespace BackendLimpio.Controllers
                 .Where(o => o.Id == id)
                 .Select(o => new { o.MotoLat, o.MotoLng })
                 .FirstOrDefaultAsync();
-
             if (order == null) return NotFound("Orden no encontrada");
             if (order.MotoLat == null) return Ok(new { lat = (double?)null, lng = (double?)null });
-
             return Ok(new { lat = order.MotoLat, lng = order.MotoLng });
         }
 
@@ -319,10 +307,8 @@ namespace BackendLimpio.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
-
             order.IsManual = request.IsManual;
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Modo manual actualizado", isManual = order.IsManual });
         }
 
@@ -333,37 +319,42 @@ namespace BackendLimpio.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
 
-            var folderPath = SystemPath.Combine("/var/data", "results");
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-            var fileName = $"{id}.pdf";
-            var filePath = SystemPath.Combine(folderPath, fileName);
-
-            using (var stream = new FileStream(filePath, System.IO.FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                using var stream = file.OpenReadStream();
+                var uploadParams = new RawUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    PublicId = $"inulab/results/{id}",
+                    Overwrite = true
+                };
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.Error != null)
+                    return BadRequest($"Error Cloudinary: {uploadResult.Error.Message}");
+
+                order.ResultPdfUrl = uploadResult.SecureUrl.ToString();
+                if (order.Status != OrderStatus.Completed)
+                    order.Status = OrderStatus.ResultsUploaded;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "PDF subido correctamente", url = order.ResultPdfUrl });
             }
-
-            order.ResultPdfUrl = $"/api/Orders/{id}/result-pdf";
-            if (order.Status != OrderStatus.Completed)
-                order.Status = OrderStatus.ResultsUploaded;
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "PDF subido correctamente", url = order.ResultPdfUrl });
+            catch (Exception ex)
+            {
+                return BadRequest($"Error al subir PDF: {ex.Message}");
+            }
         }
 
         [AllowAnonymous]
         [HttpGet("{id}/result-pdf")]
-        public IActionResult GetResultPdf(Guid id)
+        public async Task<IActionResult> GetResultPdf(Guid id)
         {
-            var filePath = SystemPath.Combine("/var/data", "results", $"{id}.pdf");
-
-            if (!System.IO.File.Exists(filePath))
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null || string.IsNullOrEmpty(order.ResultPdfUrl))
                 return NotFound("PDF no encontrado");
-
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            Response.Headers["Content-Disposition"] = "inline; filename=resultado.pdf";
-            return File(fileBytes, "application/pdf");
+            return Redirect(order.ResultPdfUrl);
         }
 
         [Authorize(Roles = "admin,motorizado")]
@@ -380,9 +371,7 @@ namespace BackendLimpio.Controllers
                 var role = User.FindFirstValue(ClaimTypes.Role) ?? "admin";
                 var prevStatus = order.Status;
 
-                var statusLower = request.Status.ToLower();
-
-                OrderStatus newStatus = statusLower switch
+                OrderStatus newStatus = request.Status.ToLower() switch
                 {
                     "pending" => OrderStatus.Pending,
                     "assigned" => OrderStatus.Assigned,
@@ -429,10 +418,8 @@ namespace BackendLimpio.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
-
             order.StaffComment = request.Comment;
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Comentario actualizado", staffComment = order.StaffComment });
         }
 
@@ -442,11 +429,9 @@ namespace BackendLimpio.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
-
             order.MotorizadoId = request.MotorizadoId;
             order.Status = OrderStatus.Assigned;
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Motorizado asignado", order });
         }
 
@@ -456,10 +441,8 @@ namespace BackendLimpio.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound("Orden no encontrada");
-
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Orden eliminada" });
         }
     }
@@ -485,29 +468,9 @@ namespace BackendLimpio.Controllers
         public bool TomaMuestra { get; set; } = false;
     }
 
-    public class UpdateStatusRequest
-    {
-        public required string Status { get; set; }
-    }
-
-    public class UpdateCommentRequest
-    {
-        public string? Comment { get; set; }
-    }
-
-    public class SetManualRequest
-    {
-        public bool IsManual { get; set; }
-    }
-
-    public class AssignMotorizadoRequest
-    {
-        public Guid MotorizadoId { get; set; }
-    }
-
-    public class LocationRequest
-    {
-        public double Lat { get; set; }
-        public double Lng { get; set; }
-    }
+    public class UpdateStatusRequest { public required string Status { get; set; } }
+    public class UpdateCommentRequest { public string? Comment { get; set; } }
+    public class SetManualRequest { public bool IsManual { get; set; } }
+    public class AssignMotorizadoRequest { public Guid MotorizadoId { get; set; } }
+    public class LocationRequest { public double Lat { get; set; } public double Lng { get; set; } }
 }
