@@ -13,7 +13,6 @@ namespace BackendLimpio.Controllers
     {
         private readonly InulaDbContext _context;
         private readonly IMemoryCache _cache;
-        private const string CACHE_KEY = "precios_catalogo";
 
         public PreciosController(InulaDbContext context, IMemoryCache cache)
         {
@@ -25,11 +24,7 @@ namespace BackendLimpio.Controllers
         [Authorize]
         public async Task<IActionResult> GetPrecios()
         {
-            if (_cache.TryGetValue(CACHE_KEY, out List<ExamenPrecio>? cached) && cached != null)
-                return Ok(cached);
-
             var precios = await _context.ExamenesPrecio.ToListAsync();
-            _cache.Set(CACHE_KEY, precios, TimeSpan.FromMinutes(30));
             return Ok(precios);
         }
 
@@ -67,11 +62,9 @@ namespace BackendLimpio.Controllers
             }
 
             await _context.SaveChangesAsync();
-            _cache.Remove(CACHE_KEY);
             return Ok(new { examenId, precio = dto.Precio });
         }
 
-        // ✅ NUEVO: Eliminar examen por id y tipo de usuario
         [HttpDelete("{examenId}/{tipoUsuario}")]
         public async Task<IActionResult> DeleteExamen(string examenId, string tipoUsuario)
         {
@@ -84,7 +77,6 @@ namespace BackendLimpio.Controllers
 
             _context.ExamenesPrecio.RemoveRange(registros);
             await _context.SaveChangesAsync();
-            _cache.Remove(CACHE_KEY);
 
             return Ok(new { eliminado = examenId, tipo = tipoUsuario });
         }
@@ -140,7 +132,6 @@ namespace BackendLimpio.Controllers
                 _context.ExamenesPrecio.AddRange(nuevos);
 
             await _context.SaveChangesAsync();
-            _cache.Remove(CACHE_KEY);
 
             return Ok(new { updated = existentes.Count, created = nuevos.Count });
         }
