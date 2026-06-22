@@ -29,9 +29,7 @@ namespace BackendLimpio.Controllers
                 return Ok(cached);
 
             var precios = await _context.ExamenesPrecio.ToListAsync();
-
             _cache.Set(CACHE_KEY, precios, TimeSpan.FromMinutes(30));
-
             return Ok(precios);
         }
 
@@ -60,15 +58,11 @@ namespace BackendLimpio.Controllers
             else
             {
                 existente.Precio = dto.Precio;
-                if (!string.IsNullOrWhiteSpace(dto.Especie))
-                    existente.Especie = dto.Especie;
+                if (!string.IsNullOrWhiteSpace(dto.Especie)) existente.Especie = dto.Especie;
                 existente.RequiereTomaMuestra = dto.RequiereTomaMuestra;
-                if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega))
-                    existente.TiempoEntrega = dto.TiempoEntrega;
-                if (!string.IsNullOrWhiteSpace(dto.Descripcion))
-                    existente.Descripcion = dto.Descripcion;
-                if (!string.IsNullOrWhiteSpace(dto.Categoria))
-                    existente.Categoria = dto.Categoria;
+                if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega)) existente.TiempoEntrega = dto.TiempoEntrega;
+                if (!string.IsNullOrWhiteSpace(dto.Descripcion)) existente.Descripcion = dto.Descripcion;
+                if (!string.IsNullOrWhiteSpace(dto.Categoria)) existente.Categoria = dto.Categoria;
                 existente.UpdatedAt = DateTime.UtcNow;
             }
 
@@ -77,13 +71,30 @@ namespace BackendLimpio.Controllers
             return Ok(new { examenId, precio = dto.Precio });
         }
 
+        // ✅ NUEVO: Eliminar examen por id y tipo de usuario
+        [HttpDelete("{examenId}/{tipoUsuario}")]
+        public async Task<IActionResult> DeleteExamen(string examenId, string tipoUsuario)
+        {
+            var registros = await _context.ExamenesPrecio
+                .Where(e => e.ExamenId == examenId && e.TipoUsuario == tipoUsuario)
+                .ToListAsync();
+
+            if (registros.Count == 0)
+                return NotFound(new { mensaje = "Examen no encontrado" });
+
+            _context.ExamenesPrecio.RemoveRange(registros);
+            await _context.SaveChangesAsync();
+            _cache.Remove(CACHE_KEY);
+
+            return Ok(new { eliminado = examenId, tipo = tipoUsuario });
+        }
+
         [HttpPost("bulk")]
         public async Task<IActionResult> BulkUpdate([FromBody] List<UpdatePrecioDto> dtos)
         {
             if (dtos == null || dtos.Count == 0)
                 return BadRequest("Lista vacía");
 
-            // 1 sola query: traer todos los existentes de una vez
             var ids = dtos.Select(d => d.ExamenId).Distinct().ToList();
             var tipos = dtos.Select(d => d.TipoUsuario).Distinct().ToList();
 
@@ -91,27 +102,20 @@ namespace BackendLimpio.Controllers
                 .Where(e => ids.Contains(e.ExamenId) && tipos.Contains(e.TipoUsuario))
                 .ToListAsync();
 
-            var existentesMap = existentes
-                .ToDictionary(e => $"{e.ExamenId}_{e.TipoUsuario}");
-
+            var existentesMap = existentes.ToDictionary(e => $"{e.ExamenId}_{e.TipoUsuario}");
             var nuevos = new List<ExamenPrecio>();
 
             foreach (var dto in dtos)
             {
                 var key = $"{dto.ExamenId}_{dto.TipoUsuario}";
-
                 if (existentesMap.TryGetValue(key, out var existente))
                 {
                     existente.Precio = dto.Precio;
-                    if (!string.IsNullOrWhiteSpace(dto.Especie))
-                        existente.Especie = dto.Especie;
+                    if (!string.IsNullOrWhiteSpace(dto.Especie)) existente.Especie = dto.Especie;
                     existente.RequiereTomaMuestra = dto.RequiereTomaMuestra;
-                    if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega))
-                        existente.TiempoEntrega = dto.TiempoEntrega;
-                    if (!string.IsNullOrWhiteSpace(dto.Descripcion))
-                        existente.Descripcion = dto.Descripcion;
-                    if (!string.IsNullOrWhiteSpace(dto.Categoria))
-                        existente.Categoria = dto.Categoria;
+                    if (!string.IsNullOrWhiteSpace(dto.TiempoEntrega)) existente.TiempoEntrega = dto.TiempoEntrega;
+                    if (!string.IsNullOrWhiteSpace(dto.Descripcion)) existente.Descripcion = dto.Descripcion;
+                    if (!string.IsNullOrWhiteSpace(dto.Categoria)) existente.Categoria = dto.Categoria;
                     existente.UpdatedAt = DateTime.UtcNow;
                 }
                 else
@@ -135,7 +139,6 @@ namespace BackendLimpio.Controllers
             if (nuevos.Count > 0)
                 _context.ExamenesPrecio.AddRange(nuevos);
 
-            // 1 sola query al final para todo
             await _context.SaveChangesAsync();
             _cache.Remove(CACHE_KEY);
 
